@@ -14,7 +14,12 @@ def create_db():
 
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor()
-    cur.execute("CREATE DATABASE coursework_5")
+
+    cur.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = 'coursework_5'")
+    exists = cur.fetchone()
+    if not exists:
+        cur.execute("CREATE DATABASE coursework_5")
+
     cur.close()
     conn.close()
 
@@ -28,24 +33,27 @@ def create_and_fill_tables():
         password=os.getenv('PG_PASSWORD')
     ) as conn:
         with conn.cursor() as cur:
-            cur.execute('''CREATE TABLE employers
-                (employer_id int PRIMARY KEY,
-                name varchar(100) NOT NULL,
-                url varchar(100) NOT NULL,
-                vacancies_url varchar(100) NOT NULL,
-                open_vacancies int NOT NULL,
-                description text);''')
+            cur.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = 'coursework_5'")
+            exists = cur.fetchone()
+            if not exists:
+                cur.execute('''CREATE TABLE employers
+                    (employer_id int PRIMARY KEY,
+                    name varchar(100) NOT NULL,
+                    url varchar(100) NOT NULL,
+                    vacancies_url varchar(100) NOT NULL,
+                    open_vacancies int NOT NULL,
+                    description text);''')
 
-            cur.execute('''CREATE TABLE vacancies
-                (vacancy_id int PRIMARY KEY,
-                employer_id int REFERENCES employers(employer_id) NOT NULL,
-                name varchar(100) NOT NULL,
-                published_at varchar(50) NOT NULL,
-                salary int,
-                url varchar(100) NOT NULL,
-                description text);''')
+                cur.execute('''CREATE TABLE vacancies
+                    (vacancy_id int PRIMARY KEY,
+                    employer_id int REFERENCES employers(employer_id) NOT NULL,
+                    name varchar(100) NOT NULL,
+                    published_at varchar(50) NOT NULL,
+                    salary int,
+                    url varchar(100) NOT NULL,
+                    description text);''')
 
-            cur.executemany("INSERT INTO employers VALUES (%s, %s, %s, %s, %s, %s)", converted_employers())
-            cur.executemany("INSERT INTO vacancies VALUES (%s, %s, %s, %s, %s, %s, %s)", converted_vacancies())
+                cur.executemany("INSERT INTO employers VALUES (%s, %s, %s, %s, %s, %s)", converted_employers())
+                cur.executemany("INSERT INTO vacancies VALUES (%s, %s, %s, %s, %s, %s, %s)", converted_vacancies())
 
     conn.close()
